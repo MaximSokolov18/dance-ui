@@ -1,5 +1,7 @@
 import {Pencil, Trash2} from 'lucide-react'
 
+import {formatDate} from '@/shared/lib/formatDate'
+
 import {Button} from '@/shared/ui/button'
 import {Skeleton} from '@/shared/ui/skeleton'
 
@@ -52,7 +54,7 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                                     <ClientStatusBadge client={client} />
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">
-                                    {client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '—'}
+                                    {formatDate(client.createdAt)}
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-1">

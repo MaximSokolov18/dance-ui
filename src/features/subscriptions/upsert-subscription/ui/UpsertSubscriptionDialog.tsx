@@ -1,14 +1,15 @@
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {toast} from 'sonner';
 
 import type {Client} from '@/entities/client';
 import type {Group} from '@/entities/group';
-import type {WeekDay} from '@/entities/group';
-import {SearchableSelect} from '@/shared/ui/searchable-select';
 import type {Subscription} from '@/entities/subscription';
+import {SearchableSelect} from '@/shared/ui/searchable-select';
 import {api} from '@/shared/api';
 import type {Holiday} from '@/shared/api';
 import {calcPeriodEnd} from '@/shared/lib/calcPeriodEnd';
+import {formatDate} from '@/shared/lib/formatDate';
+import type {WeekDay} from '@/entities/group/config/weekDays';
 import {Button} from '@/shared/ui/button';
 import {
     Dialog,
@@ -19,44 +20,37 @@ import {
     DialogTitle,
 } from '@/shared/ui/dialog';
 
-// ── Form state ────────────────────────────────────────────────────────────────
-
-interface CreateForm {
+interface SubForm {
     clientId: string;
     groupId: string;
     periodStart: string;
-    classesTotal: string;
     amountPaid: string;
-}
-
-interface EditForm {
     status: 'active' | 'expired' | 'frozen';
-    classesUsed: string;
-    periodEnd: string;
 }
 
-const emptyCreateForm = (): CreateForm => ({
+const emptyForm = (): SubForm => ({
     clientId: '',
     groupId: '',
     periodStart: '',
-    classesTotal: '',
     amountPaid: '',
+    status: 'active',
 });
 
-const subToEditForm = (s: Subscription): EditForm => ({
+const subToForm = (s: Subscription): SubForm => ({
+    clientId: s.clientId ?? '',
+    groupId: s.groupId ?? '',
+    periodStart: s.periodStart ?? '',
+    amountPaid: s.amountPaid ?? '',
     status: s.status ?? 'active',
-    classesUsed: s.classesUsed != null ? String(s.classesUsed) : '',
-    periodEnd: s.periodEnd ?? '',
 });
 
-// ── Component ─────────────────────────────────────────────────────────────────
+const AMOUNT_RE = /^\d+(\.\d{1,2})?$/;
 
 interface UpsertSubscriptionDialogProps {
     open: boolean;
     subscription: Subscription | null;
     clients: Client[];
     groups: Group[];
-    holidays: Holiday[];
     onClose: () => void;
     onSaved: (saved: Subscription, isNew: boolean) => void;
 }
@@ -66,74 +60,90 @@ export function UpsertSubscriptionDialog({
     subscription,
     clients,
     groups,
-    holidays,
     onClose,
     onSaved,
 }: UpsertSubscriptionDialogProps) {
     const isEdit = subscription !== null;
 
-    const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm);
-    const [editForm, setEditForm] = useState<EditForm>(() =>
-        subscription ? subToEditForm(subscription) : {status: 'active', classesUsed: '', periodEnd: ''},
-    );
+    const [form, setForm] = useState<SubForm>(emptyForm);
     const [saving, setSaving] = useState(false);
+    const [holidays, setHolidays] = useState<Holiday[]>([]);
+    const [amountError, setAmountError] = useState<string | null>(null);
 
-    const calculatedPeriodEnd = useMemo<string | null>(() => {
-        if (isEdit) return null;
-        if (!createForm.periodStart || !createForm.groupId || !createForm.classesTotal) return null;
-        const group = groups.find(g => g.id === createForm.groupId);
-        const client = clients.find(c => c.id === createForm.clientId);
-        const weekDays = group?.weekDays;
-        if (!weekDays || weekDays.length === 0) return null;
-        const classesTotal = Number(createForm.classesTotal);
-        if (isNaN(classesTotal) || classesTotal <= 0) return null;
-        const illnesses = client?.illnesses ?? 0;
-        return calcPeriodEnd(
-            createForm.periodStart,
-            weekDays as WeekDay[],
-            classesTotal,
-            illnesses,
-            holidays,
-        );
-    }, [isEdit, createForm.periodStart, createForm.groupId, createForm.clientId, createForm.classesTotal, clients, groups, holidays]);
+    useEffect(() => {
+        if (open) {
+            setForm(subscription ? subToForm(subscription) : emptyForm());
+            setAmountError(null);
+            api.holidays.list().then(setHolidays).catch(() => setHolidays([]));
+        }
+    }, [open, subscription]);
 
     const handleOpenChange = (isOpen: boolean) => {
-        if (isOpen) {
-            if (subscription) {
-                setEditForm(subToEditForm(subscription));
-            } else {
-                setCreateForm(emptyCreateForm());
-            }
+        if (!isOpen) onClose();
+    };
+
+    const selectedGroup = useMemo(
+        () => groups.find(g => g.id === form.groupId) ?? null,
+        [groups, form.groupId],
+    );
+
+    const selectedClient = useMemo(
+        () => clients.find(c => c.id === form.clientId) ?? null,
+        [clients, form.clientId],
+    );
+
+    const previewPeriodEnd = useMemo(() => {
+        if (!selectedGroup || !form.periodStart) return null;
+        return calcPeriodEnd(
+            form.periodStart,
+            (selectedGroup.weekDays ?? []) as WeekDay[],
+            selectedGroup.classesPerPeriod ?? 0,
+            selectedClient?.illnesses ?? 0,
+            holidays,
+        );
+    }, [selectedGroup, selectedClient, form.periodStart, holidays]);
+
+    const handleAmountChange = (value: string) => {
+        setForm(f => ({...f, amountPaid: value}));
+        if (value && !AMOUNT_RE.test(value)) {
+            setAmountError('Enter a number, e.g. 2000 or 2000.00');
         } else {
-            onClose();
+            setAmountError(null);
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        if (form.amountPaid && !AMOUNT_RE.test(form.amountPaid)) {
+            setAmountError('Enter a number, e.g. 2000 or 2000.00');
+            return;
+        }
         setSaving(true);
         try {
             if (isEdit) {
-                const payload = {
-                    status: editForm.status,
-                    classesUsed: editForm.classesUsed !== '' ? Number(editForm.classesUsed) : undefined,
-                    periodEnd: editForm.periodEnd || undefined,
-                };
-                const updated = await api.subscriptions.update(subscription.id!, payload);
+                const updated = await api.subscriptions.update(subscription.id!, {
+                    clientId: form.clientId,
+                    groupId: form.groupId,
+                    periodStart: form.periodStart,
+                    amountPaid: form.amountPaid,
+                    status: form.status,
+                });
                 onSaved(updated, false);
                 toast.success('Subscription updated');
             } else {
-                const payload = {
-                    clientId: createForm.clientId,
-                    groupId: createForm.groupId,
-                    periodStart: createForm.periodStart,
-                    periodEnd: calculatedPeriodEnd!,
-                    classesTotal: Number(createForm.classesTotal),
-                    amountPaid: createForm.amountPaid,
-                };
-                const created = await api.subscriptions.create(payload);
+                const created = await api.subscriptions.create({
+                    clientId: form.clientId,
+                    groupId: form.groupId,
+                    periodStart: form.periodStart,
+                    amountPaid: form.amountPaid,
+                });
+                await api.enrollments.create({
+                    clientId: form.clientId,
+                    groupId: form.groupId,
+                    enrolledAt: form.periodStart,
+                });
                 onSaved(created, true);
-                toast.success('Subscription added');
+                // Success toast is shown by parent after session generation
             }
             onClose();
         } catch (err: unknown) {
@@ -148,7 +158,7 @@ export function UpsertSubscriptionDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {isEdit ? 'Edit subscription' : 'Add subscription'}
@@ -156,165 +166,111 @@ export function UpsertSubscriptionDialog({
                 </DialogHeader>
 
                 <form id="sub-form" onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
-                    {isEdit ? (
-                        <>
-                            {/* Status */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="sf-status" className="text-sm font-medium">
-                                    Status
-                                </label>
-                                <select
-                                    id="sf-status"
-                                    value={editForm.status}
-                                    onChange={e =>
-                                        setEditForm(f => ({
-                                            ...f,
-                                            status: e.target.value as EditForm['status'],
-                                        }))
-                                    }
-                                    className={inputClass}
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="frozen">Frozen</option>
-                                    <option value="expired">Expired</option>
-                                </select>
-                            </div>
+                    {/* Client */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sf-client" className="text-sm font-medium">
+                            Client <span className="text-destructive">*</span>
+                        </label>
+                        <SearchableSelect
+                            id="sf-client"
+                            required
+                            options={clients.map(c => ({value: c.id!, label: c.name ?? ''}))}
+                            value={form.clientId}
+                            onChange={v => setForm(f => ({...f, clientId: v}))}
+                            placeholder="Select client…"
+                        />
+                    </div>
 
-                            {/* Classes Used */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="sf-used" className="text-sm font-medium">
-                                    Classes used
-                                </label>
-                                <input
-                                    id="sf-used"
-                                    type="number"
-                                    min={0}
-                                    value={editForm.classesUsed}
-                                    onChange={e =>
-                                        setEditForm(f => ({...f, classesUsed: e.target.value}))
-                                    }
-                                    className={inputClass}
-                                    placeholder="0"
-                                />
-                            </div>
+                    {/* Group */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sf-group" className="text-sm font-medium">
+                            Group <span className="text-destructive">*</span>
+                        </label>
+                        <SearchableSelect
+                            id="sf-group"
+                            required
+                            options={groups.map(g => ({value: g.id!, label: g.name ?? ''}))}
+                            value={form.groupId}
+                            onChange={v => setForm(f => ({...f, groupId: v}))}
+                            placeholder="Select group…"
+                        />
+                        {selectedGroup && (
+                            <p className="text-xs text-muted-foreground">
+                                {selectedGroup.classesPerPeriod} classes · {selectedGroup.weekDays?.join(', ')}
+                            </p>
+                        )}
+                    </div>
 
-                            {/* Period End */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="sf-period-end-edit" className="text-sm font-medium">
-                                    Period end
-                                </label>
-                                <input
-                                    id="sf-period-end-edit"
-                                    type="date"
-                                    value={editForm.periodEnd}
-                                    onChange={e =>
-                                        setEditForm(f => ({...f, periodEnd: e.target.value}))
-                                    }
-                                    className={inputClass}
-                                />
+                    {/* Period start */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sf-period-start" className="text-sm font-medium">
+                            Period start <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                            id="sf-period-start"
+                            type="date"
+                            required
+                            value={form.periodStart}
+                            onChange={e => setForm(f => ({...f, periodStart: e.target.value}))}
+                            className={inputClass}
+                        />
+                        {/* Period end preview */}
+                        {previewPeriodEnd && (
+                            <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                                Period ends: <span className="font-medium text-foreground">{formatDate(previewPeriodEnd)}</span>
+                                {' '}· {selectedGroup?.classesPerPeriod} classes
+                                {selectedClient?.illnesses ? ` + ${selectedClient.illnesses} makeup` : ''}
                             </div>
-                        </>
-                    ) : (
-                        <>
-                            {/* Client */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="sf-client" className="text-sm font-medium">
-                                    Client <span className="text-destructive">*</span>
-                                </label>
-                                <SearchableSelect
-                                    id="sf-client"
-                                    required
-                                    options={clients.map(c => ({value: c.id!, label: c.name ?? ''}))}
-                                    value={createForm.clientId}
-                                    onChange={v => setCreateForm(f => ({...f, clientId: v}))}
-                                    placeholder="Select client…"
-                                />
-                            </div>
+                        )}
+                    </div>
 
-                            {/* Group */}
-                            <div className="flex flex-col gap-1.5">
-                                <label htmlFor="sf-group" className="text-sm font-medium">
-                                    Group <span className="text-destructive">*</span>
-                                </label>
-                                <SearchableSelect
-                                    id="sf-group"
-                                    required
-                                    options={groups.map(g => ({value: g.id!, label: g.name ?? ''}))}
-                                    value={createForm.groupId}
-                                    onChange={v => setCreateForm(f => ({...f, groupId: v}))}
-                                    placeholder="Select group…"
-                                />
-                            </div>
+                    {/* Amount paid */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sf-amount" className="text-sm font-medium">
+                            Amount paid <span className="text-destructive">*</span>
+                        </label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
+                                ₽
+                            </span>
+                            <input
+                                id="sf-amount"
+                                type="text"
+                                inputMode="decimal"
+                                required
+                                value={form.amountPaid}
+                                onChange={e => handleAmountChange(e.target.value)}
+                                className={`${inputClass} pl-7`}
+                                placeholder="2000"
+                            />
+                        </div>
+                        {amountError && (
+                            <p className="text-xs text-destructive">{amountError}</p>
+                        )}
+                    </div>
 
-                            {/* Period start / end */}
-                            <div className="flex gap-4">
-                                <div className="flex flex-1 flex-col gap-1.5">
-                                    <label htmlFor="sf-period-start" className="text-sm font-medium">
-                                        Period start <span className="text-destructive">*</span>
-                                    </label>
-                                    <input
-                                        id="sf-period-start"
-                                        type="date"
-                                        required
-                                        value={createForm.periodStart}
-                                        onChange={e =>
-                                            setCreateForm(f => ({...f, periodStart: e.target.value}))
-                                        }
-                                        className={inputClass}
-                                    />
-                                </div>
-                                <div className="flex flex-1 flex-col gap-1.5">
-                                    <label htmlFor="sf-period-end" className="text-sm font-medium">
-                                        Period end
-                                    </label>
-                                    <input
-                                        id="sf-period-end"
-                                        type="text"
-                                        readOnly
-                                        value={calculatedPeriodEnd ?? ''}
-                                        placeholder="Auto-calculated"
-                                        className={`${inputClass} bg-muted/50 cursor-default`}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Classes total + Amount paid */}
-                            <div className="flex gap-4">
-                                <div className="flex flex-1 flex-col gap-1.5">
-                                    <label htmlFor="sf-classes" className="text-sm font-medium">
-                                        Classes total <span className="text-destructive">*</span>
-                                    </label>
-                                    <input
-                                        id="sf-classes"
-                                        type="number"
-                                        required
-                                        min={1}
-                                        value={createForm.classesTotal}
-                                        onChange={e =>
-                                            setCreateForm(f => ({...f, classesTotal: e.target.value}))
-                                        }
-                                        className={inputClass}
-                                        placeholder="8"
-                                    />
-                                </div>
-                                <div className="flex flex-1 flex-col gap-1.5">
-                                    <label htmlFor="sf-amount" className="text-sm font-medium">
-                                        Amount paid <span className="text-destructive">*</span>
-                                    </label>
-                                    <input
-                                        id="sf-amount"
-                                        type="text"
-                                        required
-                                        value={createForm.amountPaid}
-                                        onChange={e =>
-                                            setCreateForm(f => ({...f, amountPaid: e.target.value}))
-                                        }
-                                        className={inputClass}
-                                        placeholder="2000"
-                                    />
-                                </div>
-                            </div>
-                        </>
+                    {/* Status — only on edit */}
+                    {isEdit && (
+                        <div className="flex flex-col gap-1.5">
+                            <label htmlFor="sf-status" className="text-sm font-medium">
+                                Status
+                            </label>
+                            <select
+                                id="sf-status"
+                                value={form.status}
+                                onChange={e =>
+                                    setForm(f => ({
+                                        ...f,
+                                        status: e.target.value as SubForm['status'],
+                                    }))
+                                }
+                                className={inputClass}
+                            >
+                                <option value="active">Active</option>
+                                <option value="frozen">Frozen</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
                     )}
                 </form>
 
@@ -324,7 +280,7 @@ export function UpsertSubscriptionDialog({
                             Cancel
                         </Button>
                     </DialogClose>
-                    <Button type="submit" form="sub-form" disabled={saving || (!isEdit && !calculatedPeriodEnd)}>
+                    <Button type="submit" form="sub-form" disabled={saving || amountError !== null}>
                         {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add subscription'}
                     </Button>
                 </DialogFooter>

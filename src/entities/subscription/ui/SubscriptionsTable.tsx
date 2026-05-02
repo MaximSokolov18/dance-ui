@@ -1,5 +1,7 @@
 import {Pencil, Trash2} from 'lucide-react';
 
+import {formatDate} from '@/shared/lib/formatDate';
+
 import {Button} from '@/shared/ui/button';
 import {Skeleton} from '@/shared/ui/skeleton';
 import {cn} from '@/shared/lib/utils';
@@ -71,10 +73,10 @@ export function SubscriptionsTable({
                                     {groupMap.get(sub.groupId ?? '') ?? sub.groupId ?? '—'}
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                                    {sub.periodStart ?? '—'}
+                                    {formatDate(sub.periodStart)}
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                                    {sub.periodEnd ?? '—'}
+                                    {formatDate(sub.periodEnd)}
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">
                                     {clientIllnessesMap.get(sub.clientId ?? '') ?? '—'}
