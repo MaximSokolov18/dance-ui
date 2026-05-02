@@ -26,6 +26,7 @@ interface SubForm {
     periodStart: string;
     amountPaid: string;
     status: 'active' | 'expired' | 'frozen';
+    paymentMethod: 'card' | 'cash' | 'ua_card' | '';
 }
 
 const emptyForm = (): SubForm => ({
@@ -34,6 +35,7 @@ const emptyForm = (): SubForm => ({
     periodStart: '',
     amountPaid: '',
     status: 'active',
+    paymentMethod: '',
 });
 
 const subToForm = (s: Subscription): SubForm => ({
@@ -42,6 +44,7 @@ const subToForm = (s: Subscription): SubForm => ({
     periodStart: s.periodStart ?? '',
     amountPaid: s.amountPaid ?? '',
     status: s.status ?? 'active',
+    paymentMethod: (s.paymentMethod as SubForm['paymentMethod']) ?? '',
 });
 
 const AMOUNT_RE = /^\d+(\.\d{1,2})?$/;
@@ -127,6 +130,7 @@ export function UpsertSubscriptionDialog({
                     periodStart: form.periodStart,
                     amountPaid: form.amountPaid,
                     status: form.status,
+                    paymentMethod: form.paymentMethod || undefined,
                 });
                 onSaved(updated, false);
                 toast.success('Subscription updated');
@@ -136,6 +140,7 @@ export function UpsertSubscriptionDialog({
                     groupId: form.groupId,
                     periodStart: form.periodStart,
                     amountPaid: form.amountPaid,
+                    paymentMethod: form.paymentMethod || undefined,
                 });
                 await api.enrollments.create({
                     clientId: form.clientId,
@@ -231,7 +236,7 @@ export function UpsertSubscriptionDialog({
                         </label>
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
-                                ₽
+                                €
                             </span>
                             <input
                                 id="sf-amount"
@@ -247,6 +252,29 @@ export function UpsertSubscriptionDialog({
                         {amountError && (
                             <p className="text-xs text-destructive">{amountError}</p>
                         )}
+                    </div>
+
+                    {/* Payment method */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="sf-payment-method" className="text-sm font-medium">
+                            Paid by
+                        </label>
+                        <select
+                            id="sf-payment-method"
+                            value={form.paymentMethod}
+                            onChange={e =>
+                                setForm(f => ({
+                                    ...f,
+                                    paymentMethod: e.target.value as SubForm['paymentMethod'],
+                                }))
+                            }
+                            className={inputClass}
+                        >
+                            <option value="">— Not specified —</option>
+                            <option value="card">Card</option>
+                            <option value="cash">Cash</option>
+                            <option value="ua_card">UA Card</option>
+                        </select>
                     </div>
 
                     {/* Status — only on edit */}

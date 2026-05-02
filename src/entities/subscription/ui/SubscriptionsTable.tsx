@@ -40,6 +40,7 @@ export function SubscriptionsTable({
                         <th className="px-4 py-3 font-medium">Missed</th>
                         <th className="px-4 py-3 font-medium">Classes</th>
                         <th className="px-4 py-3 font-medium">Amount</th>
+                        <th className="px-4 py-3 font-medium">Paid by</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                         <th className="px-4 py-3 font-medium" />
                     </tr>
@@ -49,7 +50,7 @@ export function SubscriptionsTable({
                         ? Array.from({length: 5}).map((_, i) => (
                             // eslint-disable-next-line react/no-array-index-key
                             <tr key={i} className="border-b last:border-0">
-                                {Array.from({length: 9}).map((_, j) => (
+                                {Array.from({length: 10}).map((_, j) => (
                                     // eslint-disable-next-line react/no-array-index-key
                                     <td key={j} className="px-4 py-3">
                                         <Skeleton className="h-4 w-full" />
@@ -92,7 +93,10 @@ export function SubscriptionsTable({
                                     ) : (sub.classesTotal ?? '—')}
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">
-                                    {sub.amountPaid ? `₽${sub.amountPaid}` : '—'}
+                                    {sub.amountPaid ? `€${sub.amountPaid}` : '—'}
+                                </td>
+                                <td className="px-4 py-3 text-muted-foreground">
+                                    {sub.paymentMethod ?? '—'}
                                 </td>
                                 <td className="px-4 py-3">
                                     <SubscriptionStatusBadge status={sub.status} />
@@ -124,7 +128,7 @@ export function SubscriptionsTable({
                     {!loading && subscriptions.length === 0 && (
                         <tr>
                             <td
-                                colSpan={9}
+                                colSpan={10}
                                 className="px-4 py-10 text-center text-muted-foreground"
                             >
                                 No subscriptions yet. Add your first one!
