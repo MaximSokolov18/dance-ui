@@ -13,30 +13,31 @@ import {
     DialogTitle,
 } from '@/shared/ui/dialog'
 
-// ── Form state ────────────────────────────────────────────────────────────────
-
 interface ClientForm {
     name: string
     telegram: string
-    illnesses: string
     active: boolean
 }
 
 const emptyForm = (): ClientForm => ({
     name: '',
     telegram: '',
-    illnesses: '',
     active: true,
 })
 
 const clientToForm = (c: Client): ClientForm => ({
     name: c.name ?? '',
     telegram: c.telegram ?? '',
-    illnesses: c.illnesses != null ? String(c.illnesses) : '',
     active: c.active ?? true,
 })
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function validateTelegram(value: string): string | null {
+    if (!value) return null
+    if (!/^@[a-zA-Z0-9_]{3,}$/.test(value)) {
+        return 'Must start with @ followed by letters, numbers, or underscores (min 3 chars)'
+    }
+    return null
+}
 
 interface UpsertClientDialogProps {
     open: boolean
@@ -50,23 +51,33 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
         client ? clientToForm(client) : emptyForm(),
     )
     const [saving, setSaving] = useState(false)
+    const [telegramError, setTelegramError] = useState<string | null>(null)
 
-    // Sync form when dialog opens with new context
     const handleOpenChange = (isOpen: boolean) => {
         if (isOpen) {
             setForm(client ? clientToForm(client) : emptyForm())
+            setTelegramError(null)
         } else {
             onClose()
         }
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleTelegramChange = (value: string) => {
+        setForm(f => ({...f, telegram: value}))
+        setTelegramError(validateTelegram(value))
+    }
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault()
+        const tgErr = validateTelegram(form.telegram)
+        if (tgErr) {
+            setTelegramError(tgErr)
+            return
+        }
         setSaving(true)
         const payload = {
             name: form.name,
             telegram: form.telegram || undefined,
-            illnesses: form.illnesses !== '' ? Number(form.illnesses) : undefined,
             active: form.active,
         }
         try {
@@ -87,9 +98,12 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
         }
     }
 
+    const inputClass =
+        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{client ? 'Edit client' : 'Add client'}</DialogTitle>
                 </DialogHeader>
@@ -106,7 +120,7 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
                             required
                             value={form.name}
                             onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className={inputClass}
                             placeholder="Full name"
                         />
                     </div>
@@ -120,26 +134,14 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
                             id="cf-telegram"
                             type="text"
                             value={form.telegram}
-                            onChange={e => setForm(f => ({...f, telegram: e.target.value}))}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            onChange={e => handleTelegramChange(e.target.value)}
+                            className={inputClass}
                             placeholder="@username"
+                            inputMode="text"
                         />
-                    </div>
-
-                    {/* Illnesses */}
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="cf-illnesses" className="text-sm font-medium">
-                            Illnesses
-                        </label>
-                        <input
-                            id="cf-illnesses"
-                            type="number"
-                            min={0}
-                            value={form.illnesses}
-                            onChange={e => setForm(f => ({...f, illnesses: e.target.value}))}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            placeholder="0"
-                        />
+                        {telegramError && (
+                            <p className="text-xs text-destructive">{telegramError}</p>
+                        )}
                     </div>
 
                     {/* Active */}
@@ -163,7 +165,7 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
                             Cancel
                         </Button>
                     </DialogClose>
-                    <Button type="submit" form="client-form" disabled={saving}>
+                    <Button type="submit" form="client-form" disabled={saving || telegramError !== null}>
                         {saving ? 'Saving…' : client ? 'Save changes' : 'Add client'}
                     </Button>
                 </DialogFooter>

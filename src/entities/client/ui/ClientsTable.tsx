@@ -21,7 +21,6 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                     <tr className="border-b bg-muted/50 text-left text-muted-foreground">
                         <th className="px-4 py-3 font-medium">Name</th>
                         <th className="px-4 py-3 font-medium">Telegram</th>
-                        <th className="px-4 py-3 font-medium">Illnesses</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                         <th className="px-4 py-3 font-medium">Joined</th>
                         <th className="px-4 py-3 font-medium" />
@@ -32,7 +31,7 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                         ? Array.from({length: 5}).map((_, i) => (
                             // eslint-disable-next-line react/no-array-index-key
                             <tr key={i} className="border-b last:border-0">
-                                {Array.from({length: 6}).map((_, j) => (
+                                {Array.from({length: 5}).map((_, j) => (
                                     // eslint-disable-next-line react/no-array-index-key
                                     <td key={j} className="px-4 py-3">
                                         <Skeleton className="h-4 w-full" />
@@ -49,9 +48,6 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                                 <td className="px-4 py-3 text-muted-foreground">
                                     {client.telegram ?? '—'}
                                 </td>
-                                <td className="px-4 py-3 text-muted-foreground">
-                                    {client.illnesses ?? '—'}
-                                </td>
                                 <td className="px-4 py-3">
                                     <ClientStatusBadge client={client} />
                                 </td>
@@ -63,7 +59,7 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            className="h-8 w-8"
+                                            className="h-11 w-11"
                                             onClick={() => onEdit(client)}
                                             aria-label="Edit client"
                                         >
@@ -72,7 +68,7 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                            className="h-11 w-11 text-destructive hover:text-destructive"
                                             onClick={() => onDelete(client)}
                                             aria-label="Delete client"
                                         >
@@ -85,7 +81,7 @@ export function ClientsTable({clients, loading, onEdit, onDelete}: ClientsTableP
                     {!loading && clients.length === 0 && (
                         <tr>
                             <td
-                                colSpan={6}
+                                colSpan={5}
                                 className="px-4 py-10 text-center text-muted-foreground"
                             >
                                 No clients yet. Add your first one!
