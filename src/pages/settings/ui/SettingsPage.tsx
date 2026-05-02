@@ -37,7 +37,7 @@ export function SettingsPage() {
             setHolidays(prev => [...prev, created].sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '')));
             setForm({date: '', name: ''});
             setAddOpen(false);
-            toast.success('Holiday added · sessions on this date cancelled');
+            toast.success('Holiday added · sessions cancelled · subscription periods updated');
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Request failed');
         } finally {
@@ -52,7 +52,7 @@ export function SettingsPage() {
         try {
             await api.holidays.delete(holiday.id!);
             setHolidays(prev => prev.filter(h => h.id !== holiday.id));
-            toast.success('Holiday removed · sessions restored');
+            toast.success('Holiday removed · sessions restored · subscription periods updated');
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Request failed');
         }
