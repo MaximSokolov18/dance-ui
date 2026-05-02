@@ -296,6 +296,7 @@ export interface paths {
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
+                            classesPerPeriod?: number;
                         }[];
                     };
                 };
@@ -318,6 +319,7 @@ export interface paths {
                         classTime: string;
                         durationMin: number;
                         maxCapacity: number;
+                        classesPerPeriod: number;
                     };
                 };
             };
@@ -336,6 +338,7 @@ export interface paths {
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
+                            classesPerPeriod?: number;
                         };
                     };
                 };
@@ -392,6 +395,7 @@ export interface paths {
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
+                            classesPerPeriod?: number;
                         };
                     };
                 };
@@ -437,6 +441,7 @@ export interface paths {
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
+                            classesPerPeriod?: number;
                         };
                     };
                 };
@@ -474,6 +479,7 @@ export interface paths {
                         classTime?: string;
                         durationMin?: number;
                         maxCapacity?: number;
+                        classesPerPeriod?: number;
                     };
                 };
             };
@@ -492,6 +498,7 @@ export interface paths {
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
+                            classesPerPeriod?: number;
                         };
                     };
                 };
@@ -715,6 +722,8 @@ export interface paths {
                             amountPaid?: string;
                             /** @enum {string} */
                             status?: "active" | "expired" | "frozen";
+                            /** @enum {string|null} */
+                            paymentMethod?: "card" | "cash" | "ua_card" | null;
                         }[];
                     };
                 };
@@ -750,10 +759,9 @@ export interface paths {
                         groupId: string;
                         /** Format: date */
                         periodStart: string;
-                        /** Format: date */
-                        periodEnd: string;
-                        classesTotal: number;
                         amountPaid: string;
+                        /** @enum {string} */
+                        paymentMethod?: "card" | "cash" | "ua_card";
                     };
                 };
             };
@@ -780,11 +788,25 @@ export interface paths {
                             amountPaid?: string;
                             /** @enum {string} */
                             status?: "active" | "expired" | "frozen";
+                            /** @enum {string|null} */
+                            paymentMethod?: "card" | "cash" | "ua_card" | null;
                         };
                     };
                 };
                 /** @description Default Response */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            code?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -861,11 +883,20 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** Format: uuid */
+                        clientId?: string;
+                        /** Format: uuid */
+                        groupId?: string;
+                        /** Format: date */
+                        periodStart?: string;
+                        amountPaid?: string;
                         /** @enum {string} */
                         status?: "active" | "expired" | "frozen";
                         classesUsed?: number;
                         /** Format: date */
                         periodEnd?: string;
+                        /** @enum {string} */
+                        paymentMethod?: "card" | "cash" | "ua_card";
                     };
                 };
             };
@@ -892,6 +923,8 @@ export interface paths {
                             amountPaid?: string;
                             /** @enum {string} */
                             status?: "active" | "expired" | "frozen";
+                            /** @enum {string|null} */
+                            paymentMethod?: "card" | "cash" | "ua_card" | null;
                         };
                     };
                 };
@@ -1008,6 +1041,8 @@ export interface paths {
                         groupId: string;
                         /** @default 4 */
                         weeks?: number;
+                        /** Format: date */
+                        fromDate?: string;
                     };
                 };
             };
@@ -1074,7 +1109,52 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete a session */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id?: string;
+                            /** Format: uuid */
+                            groupId?: string;
+                            /** Format: date */
+                            sessionDate?: string;
+                            sessionTime?: string;
+                            cancelled?: boolean;
+                            /** Format: uuid */
+                            holidayId?: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            code?: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         /** Cancel or uncancel a session */
