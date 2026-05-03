@@ -1,12 +1,17 @@
 import {useEffect, useMemo, useState} from 'react';
+
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
 import {toast} from 'sonner';
 
 import type {Client} from '@/entities/client';
 import type {Group} from '@/entities/group';
 import type {Subscription} from '@/entities/subscription';
+import {useAppStore} from '@/app/store/useAppStore';
 import {SearchableSelect} from '@/shared/ui/searchable-select';
 import {api} from '@/shared/api';
 import type {Holiday} from '@/shared/api';
+import {db} from '@/shared/lib/db';
+import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
 import {calcPeriodEnd} from '@/shared/lib/calcPeriodEnd';
 import {formatDate} from '@/shared/lib/formatDate';
 import type {WeekDay} from '@/entities/group/config/weekDays';
@@ -72,6 +77,7 @@ export function UpsertSubscriptionDialog({
     const [saving, setSaving] = useState(false);
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [amountError, setAmountError] = useState<string | null>(null);
+    const keyboardOffset = useMobileKeyboardOffset();
 
     useEffect(() => {
         if (open) {
@@ -122,16 +128,18 @@ export function UpsertSubscriptionDialog({
             return;
         }
         setSaving(true);
+        const updatePayload = {
+            clientId: form.clientId,
+            groupId: form.groupId,
+            periodStart: form.periodStart,
+            amountPaid: form.amountPaid,
+            status: form.status,
+            paymentMethod: form.paymentMethod || undefined,
+        };
         try {
             if (isEdit) {
-                const updated = await api.subscriptions.update(subscription.id!, {
-                    clientId: form.clientId,
-                    groupId: form.groupId,
-                    periodStart: form.periodStart,
-                    amountPaid: form.amountPaid,
-                    status: form.status,
-                    paymentMethod: form.paymentMethod || undefined,
-                });
+                const updated = await api.subscriptions.update(subscription.id!, updatePayload);
+                await db.subscriptions.put(updated);
                 onSaved(updated, false);
                 toast.success('Subscription updated');
             } else {
@@ -142,6 +150,7 @@ export function UpsertSubscriptionDialog({
                     amountPaid: form.amountPaid,
                     paymentMethod: form.paymentMethod || undefined,
                 });
+                await db.subscriptions.put(created);
                 await api.enrollments.create({
                     clientId: form.clientId,
                     groupId: form.groupId,
@@ -152,7 +161,19 @@ export function UpsertSubscriptionDialog({
             }
             onClose();
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Request failed');
+            if (isOfflineError(err) && isEdit) {
+                await addToOutbox('PATCH', `/subscriptions/${subscription.id}`, updatePayload as Record<string, unknown>);
+                const optimistic = {...subscription, ...updatePayload};
+                await db.subscriptions.put(optimistic);
+                onSaved(optimistic, false);
+                useAppStore.getState().setPendingMutations(await getOutboxCount());
+                toast.info('Saved locally — will sync when back online');
+                onClose();
+            } else if (isOfflineError(err)) {
+                toast.error("You're offline — cannot create new subscriptions");
+            } else {
+                toast.error(err instanceof Error ? err.message : 'Request failed');
+            }
         } finally {
             setSaving(false);
         }
@@ -163,7 +184,10 @@ export function UpsertSubscriptionDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto">
+            <DialogContent
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
+            >
                 <DialogHeader>
                     <DialogTitle>
                         {isEdit ? 'Edit subscription' : 'Add subscription'}
