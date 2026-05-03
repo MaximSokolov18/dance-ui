@@ -7,6 +7,15 @@ export default defineConfig(({mode}) => {
     const env = loadEnv(mode, process.cwd(), '')
 
     return {
+        server: {
+            host: true,
+            proxy: {
+                '/api': {
+                    target: 'http://localhost:3000',
+                    rewrite: (path) => path.replace(/^\/api/, ''),
+                },
+            },
+        },
         plugins: [
             react(),
             VitePWA({
@@ -30,8 +39,15 @@ export default defineConfig(({mode}) => {
                     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
                     runtimeCaching: [
                         {
-                            urlPattern: ({url}) =>
-                                url.origin === env.VITE_API_URL,
+                            urlPattern: ({url}) => {
+                                const apiBase = env.VITE_API_BASE_URL || ''
+                                if (!apiBase) return url.pathname.startsWith('/api')
+                                try {
+                                    return url.origin === new URL(apiBase).origin
+                                } catch {
+                                    return false
+                                }
+                            },
                             handler: 'NetworkFirst',
                             options: {
                                 cacheName: 'api-cache',
