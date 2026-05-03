@@ -109,7 +109,27 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                 toast.info('Saved locally — will sync when back online');
                 onClose();
             } else if (isOfflineError(err)) {
-                toast.error("You're offline — cannot create new groups");
+                const tempId = crypto.randomUUID()
+                const optimistic: Group = {
+                    id: tempId,
+                    name: form.name,
+                    weekDays: form.weekDays,
+                    classTime: form.classTime,
+                    durationMin: Number(form.durationMin),
+                    maxCapacity: Number(form.maxCapacity),
+                    classesPerPeriod: Number(form.classesPerPeriod),
+                }
+                await db.groups.put(optimistic)
+                await addToOutbox(
+                    'POST',
+                    '/groups/',
+                    payload as Record<string, unknown>,
+                    {tempId, entityType: 'groups'},
+                )
+                onSaved(optimistic, true)
+                useAppStore.getState().setPendingMutations(await getOutboxCount())
+                toast.info('Created locally — will sync when back online')
+                onClose()
             } else {
                 toast.error(err instanceof Error ? err.message : 'Request failed');
             }
