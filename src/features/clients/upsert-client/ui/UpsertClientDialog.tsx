@@ -109,7 +109,26 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
                 toast.info('Saved locally — will sync when back online')
                 onClose()
             } else if (isOfflineError(err)) {
-                toast.error("You're offline — cannot create new clients")
+                const tempId = crypto.randomUUID()
+                const optimistic: Client = {
+                    id: tempId,
+                    name: form.name,
+                    telegram: form.telegram || null,
+                    active: form.active,
+                    illnesses: null,
+                    createdAt: new Date().toISOString(),
+                }
+                await db.clients.put(optimistic)
+                await addToOutbox(
+                    'POST',
+                    '/clients/',
+                    payload as Record<string, unknown>,
+                    {tempId, entityType: 'clients'},
+                )
+                onSaved(optimistic, true)
+                useAppStore.getState().setPendingMutations(await getOutboxCount())
+                toast.info('Created locally — will sync when back online')
+                onClose()
             } else {
                 toast.error(err instanceof Error ? err.message : 'Request failed')
             }
