@@ -1,4 +1,5 @@
 import {
+    CalendarCheck,
     CreditCard,
     LayoutGrid,
     Settings,
@@ -12,7 +13,8 @@ import {cn} from '@/shared/lib/utils';
 const NAV_ITEMS = [
     {label: 'Clients', href: '/clients', Icon: Users},
     {label: 'Groups', href: '/groups', Icon: LayoutGrid},
-    {label: 'Subs', href: '/subs', Icon: CreditCard},
+    {label: 'Subscriptions', href: '/subs', Icon: CreditCard},
+    {label: 'Sessions', href: '/sessions', Icon: CalendarCheck},
     {label: 'Settings', href: '/settings', Icon: Settings},
 ];
 
@@ -23,6 +25,8 @@ interface AppShellProps {
 export function AppShell({children}: AppShellProps) {
     const [location, navigate] = useLocation();
     const isOnline = useAppStore(s => s.isOnline);
+    const syncStatus = useAppStore(s => s.syncStatus);
+    const pendingMutations = useAppStore(s => s.pendingMutations);
 
     return (
         <div className="flex flex-col min-h-dvh">
@@ -31,13 +35,21 @@ export function AppShell({children}: AppShellProps) {
                 <span className="font-semibold tracking-tight text-foreground">
                     Dance Manager
                 </span>
-                <span
-                    className={cn(
-                        'h-2 w-2 rounded-full',
-                        isOnline ? 'bg-green-500' : 'bg-amber-500',
+                <div className="flex items-center gap-1.5">
+                    {syncStatus === 'syncing' && (
+                        <span className="text-xs text-muted-foreground animate-pulse">Syncing…</span>
                     )}
-                    aria-label={isOnline ? 'Online' : 'Offline'}
-                />
+                    {!isOnline && pendingMutations > 0 && (
+                        <span className="text-xs text-amber-500">{pendingMutations} pending</span>
+                    )}
+                    <span
+                        className={cn(
+                            'h-2 w-2 rounded-full',
+                            isOnline ? 'bg-green-500' : 'bg-amber-500',
+                        )}
+                        aria-label={isOnline ? 'Online' : 'Offline'}
+                    />
+                </div>
             </header>
 
             {/* ── Scrollable content ── */}
