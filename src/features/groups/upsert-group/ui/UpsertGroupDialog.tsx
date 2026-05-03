@@ -1,9 +1,14 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
+
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
 
 import type {Group} from '@/entities/group';
 import {ALL_DAYS, DAY_LABELS, type WeekDay} from '@/entities/group/config/weekDays';
+import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
+import {db} from '@/shared/lib/db';
+import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
 import {Button} from '@/shared/ui/button';
 import {
     Dialog,
@@ -14,14 +19,13 @@ import {
     DialogTitle,
 } from '@/shared/ui/dialog';
 
-// ── Form state ────────────────────────────────────────────────────────────────
-
 interface GroupForm {
     name: string;
     weekDays: WeekDay[];
     classTime: string;
     durationMin: string;
     maxCapacity: string;
+    classesPerPeriod: string;
 }
 
 const emptyForm = (): GroupForm => ({
@@ -30,6 +34,7 @@ const emptyForm = (): GroupForm => ({
     classTime: '',
     durationMin: '60',
     maxCapacity: '12',
+    classesPerPeriod: '8',
 });
 
 const groupToForm = (g: Group): GroupForm => ({
@@ -38,9 +43,8 @@ const groupToForm = (g: Group): GroupForm => ({
     classTime: g.classTime ?? '',
     durationMin: g.durationMin != null ? String(g.durationMin) : '',
     maxCapacity: g.maxCapacity != null ? String(g.maxCapacity) : '',
+    classesPerPeriod: g.classesPerPeriod != null ? String(g.classesPerPeriod) : '8',
 });
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 interface UpsertGroupDialogProps {
     open: boolean;
@@ -50,17 +54,16 @@ interface UpsertGroupDialogProps {
 }
 
 export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDialogProps) {
-    const [form, setForm] = useState<GroupForm>(() =>
-        group ? groupToForm(group) : emptyForm(),
-    );
+    const [form, setForm] = useState<GroupForm>(emptyForm);
     const [saving, setSaving] = useState(false);
+    const keyboardOffset = useMobileKeyboardOffset();
+
+    useEffect(() => {
+        if (open) setForm(group ? groupToForm(group) : emptyForm());
+    }, [open, group]);
 
     const handleOpenChange = (isOpen: boolean) => {
-        if (isOpen) {
-            setForm(group ? groupToForm(group) : emptyForm());
-        } else {
-            onClose();
-        }
+        if (!isOpen) onClose();
     };
 
     const toggleDay = (day: WeekDay) => {
@@ -72,7 +75,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setSaving(true);
         const payload = {
@@ -81,28 +84,49 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
             classTime: form.classTime,
             durationMin: Number(form.durationMin),
             maxCapacity: Number(form.maxCapacity),
+            classesPerPeriod: Number(form.classesPerPeriod),
         };
         try {
             if (group) {
                 const updated = await api.groups.update(group.id!, payload);
+                await db.groups.put(updated);
                 onSaved(updated, false);
                 toast.success('Group updated');
             } else {
                 const created = await api.groups.create(payload);
+                await db.groups.put(created);
                 onSaved(created, true);
                 toast.success('Group added');
             }
             onClose();
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Request failed');
+            if (isOfflineError(err) && group) {
+                await addToOutbox('PATCH', `/groups/${group.id}`, payload as Record<string, unknown>);
+                const optimistic = {...group, ...payload};
+                await db.groups.put(optimistic);
+                onSaved(optimistic, false);
+                useAppStore.getState().setPendingMutations(await getOutboxCount());
+                toast.info('Saved locally — will sync when back online');
+                onClose();
+            } else if (isOfflineError(err)) {
+                toast.error("You're offline — cannot create new groups");
+            } else {
+                toast.error(err instanceof Error ? err.message : 'Request failed');
+            }
         } finally {
             setSaving(false);
         }
     };
 
+    const inputClass =
+        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
+            >
                 <DialogHeader>
                     <DialogTitle>{group ? 'Edit group' : 'Add group'}</DialogTitle>
                 </DialogHeader>
@@ -119,7 +143,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                             required
                             value={form.name}
                             onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className={inputClass}
                             placeholder="Group name"
                         />
                     </div>
@@ -159,7 +183,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                             required
                             value={form.classTime}
                             onChange={e => setForm(f => ({...f, classTime: e.target.value}))}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className={inputClass}
                         />
                     </div>
 
@@ -176,7 +200,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                                 min={1}
                                 value={form.durationMin}
                                 onChange={e => setForm(f => ({...f, durationMin: e.target.value}))}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                className={inputClass}
                                 placeholder="60"
                             />
                         </div>
@@ -191,10 +215,30 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                                 min={1}
                                 value={form.maxCapacity}
                                 onChange={e => setForm(f => ({...f, maxCapacity: e.target.value}))}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                className={inputClass}
                                 placeholder="20"
                             />
                         </div>
+                    </div>
+
+                    {/* Classes per subscription */}
+                    <div className="flex flex-col gap-1.5">
+                        <label htmlFor="gf-classes" className="text-sm font-medium">
+                            Classes per subscription <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                            id="gf-classes"
+                            type="number"
+                            required
+                            min={1}
+                            value={form.classesPerPeriod}
+                            onChange={e => setForm(f => ({...f, classesPerPeriod: e.target.value}))}
+                            className={inputClass}
+                            placeholder="8"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Number of classes included in one subscription period.
+                        </p>
                     </div>
                 </form>
 
