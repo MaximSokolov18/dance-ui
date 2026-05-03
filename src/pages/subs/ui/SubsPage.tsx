@@ -6,10 +6,14 @@ import type {Client} from '@/entities/client';
 import type {Group} from '@/entities/group';
 import {type Subscription, SubscriptionsTable} from '@/entities/subscription';
 import {UpsertSubscriptionDialog} from '@/features/subscriptions/upsert-subscription';
+import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
+import {fetchWithFallback} from '@/shared/lib/cacheFirst';
+import {db} from '@/shared/lib/db';
+import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
+import {cn} from '@/shared/lib/utils';
 import {Button} from '@/shared/ui/button';
 import {ConfirmDialog} from '@/shared/ui/confirm-dialog';
-import {cn} from '@/shared/lib/utils';
 
 type StatusFilter = 'all' | 'active' | 'frozen' | 'expired';
 
@@ -33,16 +37,19 @@ export function SubsPage() {
 
     useEffect(() => {
         Promise.all([
-            api.subscriptions.list(),
-            api.clients.list(),
-            api.groups.list(),
+            fetchWithFallback(() => api.subscriptions.list(), db.subscriptions),
+            fetchWithFallback(api.clients.list, db.clients),
+            fetchWithFallback(api.groups.list, db.groups),
         ])
             .then(([subs, cls, grps]) => {
-                setSubscriptions(subs);
-                setClients(cls);
-                setGroups(grps);
+                setSubscriptions(subs.data);
+                setClients(cls.data);
+                setGroups(grps.data);
+                if (subs.fromCache || cls.fromCache || grps.fromCache) {
+                    toast.info("You're offline — showing cached data");
+                }
             })
-            .catch((err: Error) => toast.error(err.message))
+            .catch(() => toast.error('Failed to load subscriptions'))
             .finally(() => setLoading(false));
     }, []);
 
@@ -118,10 +125,19 @@ export function SubsPage() {
         setConfirmOpen(false);
         try {
             await api.subscriptions.delete(pendingDelete.id!);
+            await db.subscriptions.delete(pendingDelete.id!);
             setSubscriptions(prev => prev.filter(s => s.id !== pendingDelete.id));
             toast.success('Subscription deleted');
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Request failed');
+            if (isOfflineError(err)) {
+                await addToOutbox('DELETE', `/subscriptions/${pendingDelete.id}`);
+                await db.subscriptions.delete(pendingDelete.id!);
+                setSubscriptions(prev => prev.filter(s => s.id !== pendingDelete.id));
+                useAppStore.getState().setPendingMutations(await getOutboxCount());
+                toast.info('Deleted locally — will sync when back online');
+            } else {
+                toast.error(err instanceof Error ? err.message : 'Request failed');
+            }
         } finally {
             setPendingDelete(null);
         }
