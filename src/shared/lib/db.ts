@@ -8,6 +8,8 @@ export interface OutboxEntry {
     body?: string
     createdAt: string
     retries: number
+    tempId?: string
+    entityType?: string
 }
 
 class DanceManagerDB extends Dexie {
