@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 
 import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
 import {toast} from 'sonner';
@@ -78,6 +78,13 @@ export function UpsertSubscriptionDialog({
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [amountError, setAmountError] = useState<string | null>(null);
     const keyboardOffset = useMobileKeyboardOffset();
+    const dialogRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (keyboardOffset <= 0) return;
+        const focused = dialogRef.current?.querySelector(':focus') as HTMLElement | null;
+        focused?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    }, [keyboardOffset]);
 
     useEffect(() => {
         if (open) {
@@ -170,7 +177,41 @@ export function UpsertSubscriptionDialog({
                 toast.info('Saved locally — will sync when back online');
                 onClose();
             } else if (isOfflineError(err)) {
-                toast.error("You're offline — cannot create new subscriptions");
+                const tempId = crypto.randomUUID()
+                const optimistic: Subscription = {
+                    id: tempId,
+                    clientId: form.clientId,
+                    groupId: form.groupId,
+                    periodStart: form.periodStart,
+                    periodEnd: previewPeriodEnd ?? form.periodStart,
+                    classesTotal: selectedGroup?.classesPerPeriod ?? 0,
+                    classesUsed: 0,
+                    amountPaid: form.amountPaid,
+                    status: 'active',
+                    paymentMethod: (form.paymentMethod || null) as Subscription['paymentMethod'],
+                }
+                await db.subscriptions.put(optimistic)
+                await addToOutbox(
+                    'POST',
+                    '/subscriptions/',
+                    {
+                        clientId: form.clientId,
+                        groupId: form.groupId,
+                        periodStart: form.periodStart,
+                        amountPaid: form.amountPaid,
+                        paymentMethod: form.paymentMethod || undefined,
+                    },
+                    {tempId, entityType: 'subscriptions'},
+                )
+                await addToOutbox('POST', '/enrollments/', {
+                    clientId: form.clientId,
+                    groupId: form.groupId,
+                    enrolledAt: form.periodStart,
+                })
+                onSaved(optimistic, true)
+                useAppStore.getState().setPendingMutations(await getOutboxCount())
+                toast.info('Created locally — will sync when back online')
+                onClose()
             } else {
                 toast.error(err instanceof Error ? err.message : 'Request failed');
             }
@@ -185,6 +226,7 @@ export function UpsertSubscriptionDialog({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
+                ref={dialogRef}
                 style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
                 className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
             >

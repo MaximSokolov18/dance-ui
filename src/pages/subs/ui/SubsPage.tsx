@@ -95,6 +95,11 @@ export function SubsPage() {
                 endTarget.setDate(endTarget.getDate() + 14);
                 const msPerWeek = 7 * 24 * 60 * 60 * 1000;
                 const weeks = Math.max(2, Math.ceil((endTarget.getTime() - new Date(fromDate).getTime()) / msPerWeek));
+                if (!useAppStore.getState().isOnline) {
+                    await addToOutbox('POST', '/sessions/generate', {groupId: saved.groupId, fromDate, weeks});
+                    toast.info('Created locally — sessions will generate when back online');
+                    return;
+                }
                 try {
                     const generated = await api.sessions.generate({groupId: saved.groupId, fromDate, weeks});
                     const group = groups.find(g => g.id === saved.groupId);
