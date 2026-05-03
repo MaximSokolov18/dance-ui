@@ -1,8 +1,13 @@
 import {useState} from 'react'
 import {toast} from 'sonner'
 
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset'
+
 import type {Client} from '@/entities/client'
+import {useAppStore} from '@/app/store/useAppStore'
 import {api} from '@/shared/api'
+import {db} from '@/shared/lib/db'
+import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox'
 import {Button} from '@/shared/ui/button'
 import {
     Dialog,
@@ -52,6 +57,7 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
     )
     const [saving, setSaving] = useState(false)
     const [telegramError, setTelegramError] = useState<string | null>(null)
+    const keyboardOffset = useMobileKeyboardOffset()
 
     const handleOpenChange = (isOpen: boolean) => {
         if (isOpen) {
@@ -83,16 +89,30 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
         try {
             if (client) {
                 const updated = await api.clients.update(client.id!, payload)
+                await db.clients.put(updated)
                 onSaved(updated, false)
                 toast.success('Client updated')
             } else {
                 const created = await api.clients.create(payload)
+                await db.clients.put(created)
                 onSaved(created, true)
                 toast.success('Client added')
             }
             onClose()
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Request failed')
+            if (isOfflineError(err) && client) {
+                await addToOutbox('PATCH', `/clients/${client.id}`, payload as Record<string, unknown>)
+                const optimistic = {...client, ...payload}
+                await db.clients.put(optimistic)
+                onSaved(optimistic, false)
+                useAppStore.getState().setPendingMutations(await getOutboxCount())
+                toast.info('Saved locally — will sync when back online')
+                onClose()
+            } else if (isOfflineError(err)) {
+                toast.error("You're offline — cannot create new clients")
+            } else {
+                toast.error(err instanceof Error ? err.message : 'Request failed')
+            }
         } finally {
             setSaving(false)
         }
@@ -103,7 +123,10 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto">
+            <DialogContent
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
+            >
                 <DialogHeader>
                     <DialogTitle>{client ? 'Edit client' : 'Add client'}</DialogTitle>
                 </DialogHeader>
