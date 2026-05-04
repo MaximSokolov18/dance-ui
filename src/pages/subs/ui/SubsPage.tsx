@@ -2,11 +2,11 @@ import {Plus} from 'lucide-react';
 import {useEffect, useMemo, useState} from 'react';
 import {toast} from 'sonner';
 
+import {useAppStore} from '@/app/store/useAppStore';
 import type {Client} from '@/entities/client';
 import type {Group} from '@/entities/group';
 import {type Subscription, SubscriptionsTable} from '@/entities/subscription';
 import {UpsertSubscriptionDialog} from '@/features/subscriptions/upsert-subscription';
-import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
 import {fetchWithFallback} from '@/shared/lib/cacheFirst';
 import {db} from '@/shared/lib/db';
@@ -46,7 +46,7 @@ export function SubsPage() {
                 setClients(cls.data);
                 setGroups(grps.data);
                 if (subs.fromCache || cls.fromCache || grps.fromCache) {
-                    toast.info("You're offline — showing cached data");
+                    toast.info('You\'re offline — showing cached data');
                 }
             })
             .catch(() => toast.error('Failed to load subscriptions'))
@@ -109,8 +109,7 @@ export function SubsPage() {
                         : 'sessions already up to date';
                     toast.success(`Subscription created · ${sessionNote}`);
                 } catch (err: unknown) {
-                    toast.success('Subscription created');
-                    toast.error(err instanceof Error ? err.message : 'Failed to generate sessions');
+                    toast.warning(`Subscription created, but session generation failed: ${err instanceof Error ? err.message : 'unknown error'}`);
                 }
             } else {
                 toast.success('Subscription created');

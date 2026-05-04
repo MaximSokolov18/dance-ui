@@ -2,9 +2,9 @@ import {Plus, Search, UserPlus} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 
+import {useAppStore} from '@/app/store/useAppStore';
 import {type Client, ClientsTable} from '@/entities/client';
 import {UpsertClientDialog} from '@/features/clients/upsert-client';
-import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
 import {fetchWithFallback} from '@/shared/lib/cacheFirst';
 import {db} from '@/shared/lib/db';
@@ -25,7 +25,7 @@ export function ClientsPage() {
         fetchWithFallback(api.clients.list, db.clients)
             .then(({data, fromCache}) => {
                 setClients(data);
-                if (fromCache) toast.info("You're offline — showing cached data");
+                if (fromCache) toast.info('You\'re offline — showing cached data');
             })
             .catch(() => toast.error('Failed to load clients'))
             .finally(() => setLoading(false));

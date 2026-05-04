@@ -1,5 +1,6 @@
 import Dexie, {type EntityTable} from 'dexie'
-import type {Client, Group, Subscription, Session, AttendanceRecord, Holiday} from '@/shared/api'
+
+import type {AttendanceRecord, Client, Group, Holiday, Session, Subscription} from '@/shared/api'
 
 export interface OutboxEntry {
     id?: number

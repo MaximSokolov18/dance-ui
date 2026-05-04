@@ -71,7 +71,7 @@ export function SessionsPage() {
                 setClients(cls.data);
                 setAllSubs(subs.data);
                 if (grps.fromCache || cls.fromCache || subs.fromCache) {
-                    toast.info("You're offline — showing cached data");
+                    toast.info('You\'re offline — showing cached data');
                 }
             })
             .catch(() => toast.error('Failed to load'))
@@ -113,7 +113,7 @@ export function SessionsPage() {
                 setSessions(
                     [...data].sort((a, b) => (b.sessionDate ?? '').localeCompare(a.sessionDate ?? '')),
                 );
-                if (fromCache) toast.info("You're offline — showing cached sessions");
+                if (fromCache) toast.info('You\'re offline — showing cached sessions');
             })
             .finally(() => setSessionsLoading(false));
         setSelectedSessionId('');

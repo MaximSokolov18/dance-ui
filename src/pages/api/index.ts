@@ -1,6 +1,6 @@
 import createClient from 'openapi-fetch';
 
-import type {paths} from '@/api.types';
+import type {paths} from './types';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
 
@@ -33,7 +33,7 @@ type Query<P extends keyof paths, M extends keyof paths[P]> =
 /** 200/201 response body type extracted from generated paths */
 type Ok200<P extends keyof paths, M extends keyof paths[P]> =
     paths[P][M] extends {responses: {200: {content: {'application/json': infer R;};};};} ? R :
-    paths[P][M] extends {responses: {201: {content: {'application/json': infer R;};};};} ? R : never;
+        paths[P][M] extends {responses: {201: {content: {'application/json': infer R;};};};} ? R : never;
 
 // ── Exported domain types (derived from generated paths) ─────────────────────
 
@@ -137,6 +137,9 @@ export const api = {
 
         update: (id: string, body: Body<'/sessions/{id}', 'patch'>) =>
             unwrap(http.PATCH('/sessions/{id}', {params: {path: {id}}, body})),
+
+        delete: (id: string) =>
+            unwrap(http.DELETE('/sessions/{id}', {params: {path: {id}}})),
     },
 
     // attendance ───────────────────────────────────────────────────────────────

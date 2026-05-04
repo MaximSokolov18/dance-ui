@@ -1,11 +1,10 @@
 import {useState} from 'react'
 import {toast} from 'sonner'
 
-import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset'
-
-import type {Client} from '@/entities/client'
 import {useAppStore} from '@/app/store/useAppStore'
+import type {Client} from '@/entities/client'
 import {api} from '@/shared/api'
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset'
 import {db} from '@/shared/lib/db'
 import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox'
 import {Button} from '@/shared/ui/button'
@@ -57,7 +56,7 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
     )
     const [saving, setSaving] = useState(false)
     const [telegramError, setTelegramError] = useState<string | null>(null)
-    const keyboardOffset = useMobileKeyboardOffset()
+    const {offset: keyboardOffset, vvHeight} = useMobileKeyboardOffset()
 
     const handleOpenChange = (isOpen: boolean) => {
         if (isOpen) {
@@ -143,7 +142,7 @@ export function UpsertClientDialog({open, client, onClose, onSaved}: UpsertClien
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
-                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset, maxHeight: vvHeight - 16} : undefined}
                 className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
             >
                 <DialogHeader>

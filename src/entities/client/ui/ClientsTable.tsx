@@ -1,7 +1,6 @@
 import {Pencil, Trash2} from 'lucide-react'
 
 import {formatDate} from '@/shared/lib/formatDate'
-
 import {Button} from '@/shared/ui/button'
 import {Skeleton} from '@/shared/ui/skeleton'
 

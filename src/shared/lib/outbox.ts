@@ -1,4 +1,7 @@
+import {toast} from 'sonner'
+
 import type {Client, Group, Subscription} from '@/shared/api'
+
 import {db, type OutboxEntry} from './db'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
@@ -65,10 +68,11 @@ export async function processOutbox(): Promise<void> {
                     const serverEntity = (await res.json()) as Record<string, unknown>
                     const serverId = serverEntity.id as string
                     await applyServerEntity(entry.entityType, entry.tempId, serverEntity)
+                    const tempIdPattern = new RegExp(entry.tempId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
                     for (let j = i + 1; j < entries.length; j++) {
                         const later = entries[j]!
-                        const newPath = later.path.replaceAll(entry.tempId, serverId)
-                        const newBody = later.body?.replaceAll(entry.tempId, serverId)
+                        const newPath = later.path.replace(tempIdPattern, serverId)
+                        const newBody = later.body?.replace(tempIdPattern, serverId)
                         if (newPath !== later.path || newBody !== later.body) {
                             entries[j] = {...later, path: newPath, body: newBody}
                             await db.outbox.update(later.id!, {path: newPath, body: newBody})
@@ -77,6 +81,8 @@ export async function processOutbox(): Promise<void> {
                 }
                 await db.outbox.delete(entry.id!)
             } else if (entry.retries >= 2) {
+                console.error('[outbox] Dropping entry after max retries', entry)
+                toast.error('A pending change could not be synced and was dropped')
                 await db.outbox.delete(entry.id!)
             } else {
                 await db.outbox.put({...entry, retries: entry.retries + 1})

@@ -1,20 +1,18 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
-
-import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
+import {useEffect, useMemo, useState} from 'react';
 import {toast} from 'sonner';
 
+import {useAppStore} from '@/app/store/useAppStore';
 import type {Client} from '@/entities/client';
 import type {Group} from '@/entities/group';
-import type {Subscription} from '@/entities/subscription';
-import {useAppStore} from '@/app/store/useAppStore';
-import {SearchableSelect} from '@/shared/ui/searchable-select';
-import {api} from '@/shared/api';
-import type {Holiday} from '@/shared/api';
-import {db} from '@/shared/lib/db';
-import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
-import {calcPeriodEnd} from '@/shared/lib/calcPeriodEnd';
-import {formatDate} from '@/shared/lib/formatDate';
 import type {WeekDay} from '@/entities/group/config/weekDays';
+import type {Subscription} from '@/entities/subscription';
+import type {Holiday} from '@/shared/api';
+import {api} from '@/shared/api';
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
+import {calcPeriodEnd} from '@/shared/lib/calcPeriodEnd';
+import {db} from '@/shared/lib/db';
+import {formatDate} from '@/shared/lib/formatDate';
+import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
 import {Button} from '@/shared/ui/button';
 import {
     Dialog,
@@ -24,6 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/shared/ui/dialog';
+import {SearchableSelect} from '@/shared/ui/searchable-select';
 
 interface SubForm {
     clientId: string;
@@ -77,14 +76,7 @@ export function UpsertSubscriptionDialog({
     const [saving, setSaving] = useState(false);
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [amountError, setAmountError] = useState<string | null>(null);
-    const keyboardOffset = useMobileKeyboardOffset();
-    const dialogRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (keyboardOffset <= 0) return;
-        const focused = dialogRef.current?.querySelector(':focus') as HTMLElement | null;
-        focused?.scrollIntoView({block: 'nearest', behavior: 'smooth'});
-    }, [keyboardOffset]);
+    const {offset: keyboardOffset, vvHeight} = useMobileKeyboardOffset();
 
     useEffect(() => {
         if (open) {
@@ -226,8 +218,7 @@ export function UpsertSubscriptionDialog({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
-                ref={dialogRef}
-                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset, maxHeight: vvHeight - 16} : undefined}
                 className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
             >
                 <DialogHeader>

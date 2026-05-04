@@ -37,3 +37,17 @@
     @apply flex flex-col min-h-dvh;
   }
 }
+
+@layer utilities {
+  /* Prevent iOS auto-zoom on focus inside dialogs/sheets (requires >= 16px font) */
+  @media (max-width: 639px) {
+    [role="dialog"] input,
+    [role="dialog"] select,
+    [role="dialog"] textarea,
+    [data-vaul-drawer] input,
+    [data-vaul-drawer] select,
+    [data-vaul-drawer] textarea {
+      font-size: 16px;
+    }
+  }
+}

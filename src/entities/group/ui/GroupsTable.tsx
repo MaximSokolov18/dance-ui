@@ -24,6 +24,7 @@ export function GroupsTable({groups, loading, onEdit, onDelete}: GroupsTableProp
                         <th className="px-4 py-3 font-medium">Time</th>
                         <th className="px-4 py-3 font-medium">Duration</th>
                         <th className="px-4 py-3 font-medium">Capacity</th>
+                        <th className="px-4 py-3 font-medium">Classes</th>
                         <th className="px-4 py-3 font-medium" />
                     </tr>
                 </thead>
@@ -32,7 +33,7 @@ export function GroupsTable({groups, loading, onEdit, onDelete}: GroupsTableProp
                         ? Array.from({length: 5}).map((_, i) => (
                             // eslint-disable-next-line react/no-array-index-key
                             <tr key={i} className="border-b last:border-0">
-                                {Array.from({length: 6}).map((_, j) => (
+                                {Array.from({length: 7}).map((_, j) => (
                                     // eslint-disable-next-line react/no-array-index-key
                                     <td key={j} className="px-4 py-3">
                                         <Skeleton className="h-4 w-full" />
@@ -58,12 +59,15 @@ export function GroupsTable({groups, loading, onEdit, onDelete}: GroupsTableProp
                                 <td className="px-4 py-3 text-muted-foreground">
                                     {group.maxCapacity ?? '—'}
                                 </td>
+                                <td className="px-4 py-3 text-muted-foreground">
+                                    {group.classesPerPeriod ?? '—'}
+                                </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-1">
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            className="h-8 w-8"
+                                            className="h-11 w-11"
                                             onClick={() => onEdit(group)}
                                             aria-label="Edit group"
                                         >
@@ -72,7 +76,7 @@ export function GroupsTable({groups, loading, onEdit, onDelete}: GroupsTableProp
                                         <Button
                                             size="icon"
                                             variant="ghost"
-                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                            className="h-11 w-11 text-destructive hover:text-destructive"
                                             onClick={() => onDelete(group)}
                                             aria-label="Delete group"
                                         >
@@ -85,7 +89,7 @@ export function GroupsTable({groups, loading, onEdit, onDelete}: GroupsTableProp
                     {!loading && groups.length === 0 && (
                         <tr>
                             <td
-                                colSpan={6}
+                                colSpan={7}
                                 className="px-4 py-10 text-center text-muted-foreground"
                             >
                                 No groups yet. Add your first one!

@@ -1,12 +1,11 @@
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 
-import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
-
+import {useAppStore} from '@/app/store/useAppStore';
 import type {Group} from '@/entities/group';
 import {ALL_DAYS, DAY_LABELS, type WeekDay} from '@/entities/group/config/weekDays';
-import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
+import {useMobileKeyboardOffset} from '@/shared/hooks/useMobileKeyboardOffset';
 import {db} from '@/shared/lib/db';
 import {addToOutbox, getOutboxCount, isOfflineError} from '@/shared/lib/outbox';
 import {Button} from '@/shared/ui/button';
@@ -56,7 +55,7 @@ interface UpsertGroupDialogProps {
 export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDialogProps) {
     const [form, setForm] = useState<GroupForm>(emptyForm);
     const [saving, setSaving] = useState(false);
-    const keyboardOffset = useMobileKeyboardOffset();
+    const {offset: keyboardOffset, vvHeight} = useMobileKeyboardOffset();
 
     useEffect(() => {
         if (open) setForm(group ? groupToForm(group) : emptyForm());
@@ -144,7 +143,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
-                style={keyboardOffset > 0 ? {bottom: keyboardOffset} : undefined}
+                style={keyboardOffset > 0 ? {bottom: keyboardOffset, maxHeight: vvHeight - 16} : undefined}
                 className="left-0 bottom-0 top-auto translate-x-0 translate-y-0 max-w-full sm:left-[50%] sm:bottom-auto sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[90dvh] overflow-y-auto"
             >
                 <DialogHeader>
@@ -176,9 +175,9 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                                 <label
                                     key={day}
                                     className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${form.weekDays.includes(day)
-                                            ? 'border-primary bg-primary/10 text-primary'
-                                            : 'border-input bg-background text-muted-foreground hover:bg-muted/50'
-                                        }`}
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-input bg-background text-muted-foreground hover:bg-muted/50'
+                                    }`}
                                 >
                                     <input
                                         type="checkbox"

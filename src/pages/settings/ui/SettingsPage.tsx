@@ -2,9 +2,9 @@ import {CalendarX, Plus, Trash2} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 
+import type {Holiday} from '@/shared/api';
 import {api} from '@/shared/api';
 import {formatDate} from '@/shared/lib/formatDate';
-import type {Holiday} from '@/shared/api';
 import {Button} from '@/shared/ui/button';
 import {ConfirmDialog} from '@/shared/ui/confirm-dialog';
 import {Skeleton} from '@/shared/ui/skeleton';

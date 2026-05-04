@@ -2,9 +2,9 @@ import {Plus, Search} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 
+import {useAppStore} from '@/app/store/useAppStore';
 import {type Group, GroupsTable} from '@/entities/group';
 import {UpsertGroupDialog} from '@/features/groups/upsert-group';
-import {useAppStore} from '@/app/store/useAppStore';
 import {api} from '@/shared/api';
 import {fetchWithFallback} from '@/shared/lib/cacheFirst';
 import {db} from '@/shared/lib/db';
@@ -25,7 +25,7 @@ export function GroupsPage() {
         fetchWithFallback(api.groups.list, db.groups)
             .then(({data, fromCache}) => {
                 setGroups(data);
-                if (fromCache) toast.info("You're offline — showing cached data");
+                if (fromCache) toast.info('You\'re offline — showing cached data');
             })
             .catch(() => toast.error('Failed to load groups'))
             .finally(() => setLoading(false));

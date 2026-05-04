@@ -1,10 +1,9 @@
 import {Pencil, Trash2} from 'lucide-react';
 
 import {formatDate} from '@/shared/lib/formatDate';
-
+import {cn} from '@/shared/lib/utils';
 import {Button} from '@/shared/ui/button';
 import {Skeleton} from '@/shared/ui/skeleton';
-import {cn} from '@/shared/lib/utils';
 
 import type {Subscription} from '../model/types';
 import {SubscriptionStatusBadge} from './SubscriptionStatusBadge';

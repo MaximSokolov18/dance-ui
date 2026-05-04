@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "generate:types": "openapi-typescript http://localhost:3000/docs/json -o src/api.types.ts"
+    "generate:types": "openapi-typescript http://localhost:3000/docs/json -o src/pages/api/types.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",

@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/clients/": {
+    '/clients/': {
         parameters: {
             query?: never;
             header?: never;
@@ -27,7 +27,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
@@ -52,7 +52,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         name: string;
                         telegram?: string;
                         illnesses?: number;
@@ -67,7 +67,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
@@ -85,7 +85,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -99,7 +99,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/clients/{id}": {
+    '/clients/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -124,7 +124,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
@@ -142,7 +142,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -170,7 +170,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
@@ -188,7 +188,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -210,7 +210,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         name?: string;
                         telegram?: string;
                         illnesses?: number;
@@ -225,7 +225,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
@@ -243,7 +243,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -255,7 +255,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -265,7 +265,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/groups/": {
+    '/groups/': {
         parameters: {
             query?: never;
             header?: never;
@@ -288,11 +288,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
-                            weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                            weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
@@ -313,9 +313,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         name: string;
-                        weekDays: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                        weekDays: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                         classTime: string;
                         durationMin: number;
                         maxCapacity: number;
@@ -330,11 +330,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
-                            weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                            weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
@@ -348,7 +348,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -362,7 +362,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/groups/{id}": {
+    '/groups/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -387,11 +387,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
-                            weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                            weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
@@ -405,7 +405,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -433,11 +433,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
-                            weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                            weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
@@ -451,7 +451,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -473,9 +473,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         name?: string;
-                        weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                        weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                         classTime?: string;
                         durationMin?: number;
                         maxCapacity?: number;
@@ -490,11 +490,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             name?: string;
-                            weekDays?: ("monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday")[];
+                            weekDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
                             classTime?: string;
                             durationMin?: number;
                             maxCapacity?: number;
@@ -508,7 +508,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -520,7 +520,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -530,7 +530,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/enrollments/": {
+    '/enrollments/': {
         parameters: {
             query?: never;
             header?: never;
@@ -549,7 +549,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: uuid */
                         clientId: string;
                         /** Format: uuid */
@@ -566,7 +566,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -586,7 +586,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -600,7 +600,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/enrollments/{id}": {
+    '/enrollments/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -625,7 +625,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: date */
                         leftAt: string;
                     };
@@ -638,7 +638,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -658,7 +658,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -670,7 +670,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -680,7 +680,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/subscriptions/": {
+    '/subscriptions/': {
         parameters: {
             query?: never;
             header?: never;
@@ -692,7 +692,7 @@ export interface paths {
             parameters: {
                 query?: {
                     client_id?: string;
-                    status?: "active" | "expired" | "frozen";
+                    status?: 'active' | 'expired' | 'frozen';
                 };
                 header?: never;
                 path?: never;
@@ -706,7 +706,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -721,9 +721,9 @@ export interface paths {
                             classesUsed?: number;
                             amountPaid?: string;
                             /** @enum {string} */
-                            status?: "active" | "expired" | "frozen";
+                            status?: 'active' | 'expired' | 'frozen';
                             /** @enum {string|null} */
-                            paymentMethod?: "card" | "cash" | "ua_card" | null;
+                            paymentMethod?: 'card' | 'cash' | 'ua_card' | null;
                         }[];
                     };
                 };
@@ -733,7 +733,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -752,7 +752,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: uuid */
                         clientId: string;
                         /** Format: uuid */
@@ -761,7 +761,7 @@ export interface paths {
                         periodStart: string;
                         amountPaid: string;
                         /** @enum {string} */
-                        paymentMethod?: "card" | "cash" | "ua_card";
+                        paymentMethod?: 'card' | 'cash' | 'ua_card';
                     };
                 };
             };
@@ -772,7 +772,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -787,9 +787,9 @@ export interface paths {
                             classesUsed?: number;
                             amountPaid?: string;
                             /** @enum {string} */
-                            status?: "active" | "expired" | "frozen";
+                            status?: 'active' | 'expired' | 'frozen';
                             /** @enum {string|null} */
-                            paymentMethod?: "card" | "cash" | "ua_card" | null;
+                            paymentMethod?: 'card' | 'cash' | 'ua_card' | null;
                         };
                     };
                 };
@@ -799,7 +799,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -811,7 +811,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -825,7 +825,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/subscriptions/{id}": {
+    '/subscriptions/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -860,7 +860,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -882,7 +882,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: uuid */
                         clientId?: string;
                         /** Format: uuid */
@@ -891,12 +891,12 @@ export interface paths {
                         periodStart?: string;
                         amountPaid?: string;
                         /** @enum {string} */
-                        status?: "active" | "expired" | "frozen";
+                        status?: 'active' | 'expired' | 'frozen';
                         classesUsed?: number;
                         /** Format: date */
                         periodEnd?: string;
                         /** @enum {string} */
-                        paymentMethod?: "card" | "cash" | "ua_card";
+                        paymentMethod?: 'card' | 'cash' | 'ua_card';
                     };
                 };
             };
@@ -907,7 +907,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -922,9 +922,9 @@ export interface paths {
                             classesUsed?: number;
                             amountPaid?: string;
                             /** @enum {string} */
-                            status?: "active" | "expired" | "frozen";
+                            status?: 'active' | 'expired' | 'frozen';
                             /** @enum {string|null} */
-                            paymentMethod?: "card" | "cash" | "ua_card" | null;
+                            paymentMethod?: 'card' | 'cash' | 'ua_card' | null;
                         };
                     };
                 };
@@ -934,7 +934,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -946,7 +946,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -956,7 +956,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/sessions/": {
+    '/sessions/': {
         parameters: {
             query?: never;
             header?: never;
@@ -981,7 +981,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1001,7 +1001,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1017,7 +1017,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/generate": {
+    '/sessions/generate': {
         parameters: {
             query?: never;
             header?: never;
@@ -1036,7 +1036,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: uuid */
                         groupId: string;
                         /** @default 4 */
@@ -1053,7 +1053,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1073,7 +1073,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1085,7 +1085,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1099,7 +1099,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{id}": {
+    '/sessions/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -1127,7 +1127,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1147,7 +1147,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1169,7 +1169,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         cancelled: boolean;
                     };
                 };
@@ -1181,7 +1181,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1201,7 +1201,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1213,7 +1213,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1223,7 +1223,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/attendance/{session_id}": {
+    '/attendance/{session_id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -1248,7 +1248,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1272,7 +1272,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/attendance/{session_id}/mark": {
+    '/attendance/{session_id}/mark': {
         parameters: {
             query?: never;
             header?: never;
@@ -1293,7 +1293,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: uuid */
                         clientId: string;
                         present: boolean;
@@ -1310,7 +1310,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: uuid */
@@ -1332,7 +1332,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/holidays/": {
+    '/holidays/': {
         parameters: {
             query?: never;
             header?: never;
@@ -1355,7 +1355,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: date */
@@ -1378,7 +1378,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    'application/json': {
                         /** Format: date */
                         date: string;
                         name: string;
@@ -1394,7 +1394,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: date */
@@ -1410,7 +1410,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1422,7 +1422,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1436,7 +1436,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/holidays/{id}": {
+    '/holidays/{id}': {
         parameters: {
             query?: never;
             header?: never;
@@ -1464,7 +1464,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             /** Format: uuid */
                             id?: string;
                             /** Format: date */
@@ -1480,7 +1480,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
+                        'application/json': {
                             error?: string;
                             code?: string;
                         };
@@ -1493,7 +1493,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/dashboard/": {
+    '/dashboard/': {
         parameters: {
             query?: never;
             header?: never;
@@ -1527,7 +1527,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/electric/{*}": {
+    '/electric/{*}': {
         parameters: {
             query?: never;
             header?: never;
@@ -1539,7 +1539,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    "*": string;
+                    '*': string;
                 };
                 cookie?: never;
             };
