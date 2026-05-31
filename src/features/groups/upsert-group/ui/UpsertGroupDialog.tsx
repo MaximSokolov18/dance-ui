@@ -39,7 +39,7 @@ const emptyForm = (): GroupForm => ({
 const groupToForm = (g: Group): GroupForm => ({
     name: g.name ?? '',
     weekDays: (g.weekDays ?? []) as WeekDay[],
-    classTime: g.classTime ?? '',
+    classTime: g.classTime?.split(':').slice(0, 2).join(':') ?? '',
     durationMin: g.durationMin != null ? String(g.durationMin) : '',
     maxCapacity: g.maxCapacity != null ? String(g.maxCapacity) : '',
     classesPerPeriod: g.classesPerPeriod != null ? String(g.classesPerPeriod) : '8',
@@ -80,7 +80,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
         const payload = {
             name: form.name,
             weekDays: form.weekDays,
-            classTime: form.classTime,
+            classTime: form.classTime.split(':').slice(0, 2).join(':'),
             durationMin: Number(form.durationMin),
             maxCapacity: Number(form.maxCapacity),
             classesPerPeriod: Number(form.classesPerPeriod),
@@ -113,7 +113,7 @@ export function UpsertGroupDialog({open, group, onClose, onSaved}: UpsertGroupDi
                     id: tempId,
                     name: form.name,
                     weekDays: form.weekDays,
-                    classTime: form.classTime,
+                    classTime: form.classTime.split(':').slice(0, 2).join(':'),
                     durationMin: Number(form.durationMin),
                     maxCapacity: Number(form.maxCapacity),
                     classesPerPeriod: Number(form.classesPerPeriod),
