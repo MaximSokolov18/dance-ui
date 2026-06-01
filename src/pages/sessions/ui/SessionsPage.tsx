@@ -154,9 +154,21 @@ export function SessionsPage() {
         });
     }, [filteredSessions]);
 
+    const selectedSessionDate = useMemo(
+        () => sessions.find(s => s.id === selectedSessionId)?.sessionDate ?? '',
+        [sessions, selectedSessionId],
+    );
+
     const groupSubs = useMemo(
-        () => allSubs.filter(s => s.groupId === selectedGroupId),
-        [allSubs, selectedGroupId],
+        () =>
+            allSubs.filter(s => {
+                if (s.groupId !== selectedGroupId) return false;
+                if (!selectedSessionDate) return true;
+                const start = s.periodStart ?? '';
+                const end = s.periodEnd ?? '9999-12-31';
+                return start <= selectedSessionDate && selectedSessionDate <= end;
+            }),
+        [allSubs, selectedGroupId, selectedSessionDate],
     );
 
     useEffect(() => {
@@ -536,7 +548,7 @@ export function SessionsPage() {
                         ))
                     ) : groupSubs.length === 0 ? (
                         <p className="py-4 text-center text-sm text-muted-foreground">
-                            No active subscriptions for this group
+                            No subscriptions cover this session date
                         </p>
                     ) : (
                         <>
