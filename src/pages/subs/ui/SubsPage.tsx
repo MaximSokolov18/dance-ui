@@ -1,4 +1,4 @@
-import {Plus} from 'lucide-react';
+import {Plus, Search} from 'lucide-react';
 import {useEffect, useMemo, useState} from 'react';
 import {toast} from 'sonner';
 
@@ -32,6 +32,7 @@ export function SubsPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingSub, setEditingSub] = useState<Subscription | null>(null);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [pendingDelete, setPendingDelete] = useState<Subscription | null>(null);
 
@@ -68,13 +69,17 @@ export function SubsPage() {
         [groups],
     );
 
-    const filteredSubscriptions = useMemo(
-        () =>
-            statusFilter === 'all'
-                ? subscriptions
-                : subscriptions.filter(s => s.status === statusFilter),
-        [subscriptions, statusFilter],
-    );
+    const filteredSubscriptions = useMemo(() => {
+        const byStatus = statusFilter === 'all'
+            ? subscriptions
+            : subscriptions.filter(s => s.status === statusFilter);
+        if (!searchQuery) return byStatus;
+        const q = searchQuery.toLowerCase();
+        return byStatus.filter(s => {
+            const name = clientMap.get(s.clientId ?? '') ?? '';
+            return name.toLowerCase().includes(q);
+        });
+    }, [subscriptions, statusFilter, searchQuery, clientMap]);
 
     const openAdd = () => {
         setEditingSub(null);
@@ -159,6 +164,18 @@ export function SubsPage() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add subscription
                 </Button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                    type="search"
+                    placeholder="Search by client name…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
             </div>
 
             {/* Status filter tabs */}
