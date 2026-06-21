@@ -127,13 +127,16 @@ export function UpsertSubscriptionDialog({
             return;
         }
         setSaving(true);
+        // Omit status when unchanged so the server can recompute it (e.g.
+        // reactivate an expired sub when the new dates make it valid again).
+        const statusChanged = isEdit && form.status !== subscription.status;
         const updatePayload = {
             clientId: form.clientId,
             groupId: form.groupId,
             periodStart: form.periodStart,
             amountPaid: form.amountPaid,
-            status: form.status,
             paymentMethod: form.paymentMethod || undefined,
+            ...(statusChanged || !isEdit ? {status: form.status} : {}),
         };
         try {
             if (isEdit) {
@@ -283,6 +286,11 @@ export function UpsertSubscriptionDialog({
                                 {' '}· {selectedGroup?.classesPerPeriod} classes
                                 {selectedClient?.illnesses ? ` + ${selectedClient.illnesses} makeup` : ''}
                             </div>
+                        )}
+                        {isEdit && subscription && form.periodStart !== subscription.periodStart && (
+                            <p className="text-xs text-muted-foreground">
+                                End date, used classes, and status will be recomputed. Absences before the new start are ignored.
+                            </p>
                         )}
                     </div>
 
