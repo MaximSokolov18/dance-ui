@@ -15,14 +15,28 @@ import {cn} from '@/shared/lib/utils';
 import {Button} from '@/shared/ui/button';
 import {ConfirmDialog} from '@/shared/ui/confirm-dialog';
 
-type StatusFilter = 'all' | 'active' | 'frozen' | 'expired';
+type StatusFilter = 'all' | 'active' | 'frozen' | 'expired' | 'expiringTomorrow';
 
 const STATUS_TABS: {value: StatusFilter; label: string}[] = [
     {value: 'all', label: 'All'},
     {value: 'active', label: 'Active'},
     {value: 'frozen', label: 'Frozen'},
     {value: 'expired', label: 'Expired'},
+    {value: 'expiringTomorrow', label: 'Expires tomorrow'},
 ];
+
+function getTomorrowIso(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const y = tomorrow.getFullYear();
+    const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const d = String(tomorrow.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function expiresOn(sub: Subscription, iso: string): boolean {
+    return (sub.periodEnd ?? '').split('T')[0] === iso;
+}
 
 export function SubsPage() {
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -69,17 +83,21 @@ export function SubsPage() {
         [groups],
     );
 
+    const tomorrowIso = getTomorrowIso();
+
     const filteredSubscriptions = useMemo(() => {
-        const byStatus = statusFilter === 'all'
-            ? subscriptions
-            : subscriptions.filter(s => s.status === statusFilter);
+        const byStatus =
+            statusFilter === 'all' ? subscriptions
+                : statusFilter === 'expiringTomorrow'
+                    ? subscriptions.filter(s => expiresOn(s, tomorrowIso))
+                    : subscriptions.filter(s => s.status === statusFilter);
         if (!searchQuery) return byStatus;
         const q = searchQuery.toLowerCase();
         return byStatus.filter(s => {
             const name = clientMap.get(s.clientId ?? '') ?? '';
             return name.toLowerCase().includes(q);
         });
-    }, [subscriptions, statusFilter, searchQuery, clientMap]);
+    }, [subscriptions, statusFilter, searchQuery, clientMap, tomorrowIso]);
 
     const openAdd = () => {
         setEditingSub(null);
@@ -194,7 +212,9 @@ export function SubsPage() {
                         {tab.label}
                         {tab.value !== 'all' && (
                             <span className="ml-1 text-xs opacity-70">
-                                {subscriptions.filter(s => s.status === tab.value).length}
+                                {tab.value === 'expiringTomorrow'
+                                    ? subscriptions.filter(s => expiresOn(s, tomorrowIso)).length
+                                    : subscriptions.filter(s => s.status === tab.value).length}
                             </span>
                         )}
                     </button>
